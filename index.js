@@ -3,7 +3,17 @@
 // create global var for map to use for the several different functions it will be needed for
 var map;
 
-// fetches the reliefweb API
+const apiKey = '129dca29bda24b02aa5ec3b9cf875b1e'
+
+const searchURL = 'https://newsapi.org/v2/everything';
+
+function formatQueryParams(params) {
+  const queryItems = Object.keys(params)
+    .map(key => `${key}=${params[key]}`)
+  return queryItems.join('&');
+}
+
+//
 function callUrl() {
   fetch('https://api.reliefweb.int/v1/disasters?profile=full')
   .then(response => response.json())
@@ -12,15 +22,43 @@ function callUrl() {
     .catch(error => alert('Something went wrong. Try again later.'));
 }
 
-// takes the Relief Web data and cycles through its array to create variables to plug into the Map
 function disasterData(responseJson) {
   for (let i=0; i<responseJson.data.length; i++) {
     const lat=responseJson.data[i].fields.country[0].location.lat;
     const long=responseJson.data[i].fields.country[0].location.lon;
-    drawMarkers(long,lat)
+    const location=responseJson.data[i].fields.name;
+    drawMarkers(long,lat, location)
   }
 }
 
+// generates news based of name of disaster area from relief API
+function getNews(query, maxResults=10) {
+  const params = {
+    q: query,
+    language: "en",
+  };
+  const queryString = formatQueryParams(params)
+  const url = searchURL + '?' + queryString;
+
+  console.log(url);
+
+  const options = {
+    headers: new Headers({
+      "X-Api-Key": apiKey})
+  };
+// fetch API url then throw promises to see if there are any errors or not
+  fetch(url, options)
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      }
+      throw new Error(response.statusText);
+    })
+    .then(responseJson => console.log(responseJson))
+    .catch(err => {
+      $('#js-error-message').text(`Something went wrong: ${err.message}`);
+    });
+}
 
 // throws promise to check if there are any errors when loading the webgl map
 function displayResults() {
@@ -29,6 +67,7 @@ function displayResults() {
   .then(() => {
     console.log('map loaded')
     callUrl();
+    // getPopups();
   })
   .catch(err => {
     console.log(`map failed to load ${err}`)
@@ -44,44 +83,21 @@ function newMap(mapboxgl) {
   return Promise.resolve();
 }
 
-// generates map markers based of the Relief Web longitude and latitude data
-function drawMarkers(long,lat) {
+
+//
+function drawMarkers(long,lat,location) {
+  var link=`<a href="https://www.google.com">${location}</a>`
   var marker = new mapboxgl.Marker()
     .setLngLat([long, lat])
-    .addTo(map);
+    .addTo(map)
+    .setPopup(new mapboxgl.Popup().setLngLat([long, lat]).setHTML(link))
 }
 
-// once user hovers over one of the possible map markers this function will act as though the curser is UI and let the markers have popup capability
-function getPopups() {
-  var popup = new mapboxgl.Popup({
-    closeButton: false,
-    closeOnClick: false
+//
+function watchForm() {
+  $('form').submit(event => {
+    event.preventDefault();
   })
-  map.on('mouseenter', 'places', function(e) {
-  // Change the cursor style as a UI indicator.
-    map.getCanvas().style.cursor = 'pointer';
-
-    var coordinates = e.features[0].geometry.coordinates.slice();
-    var description = e.features[0].properties.description;
-
-    // Ensure that if the map is zoomed out such that multiple
-    // copies of the feature are visible, the popup appears
-    // over the copy being pointed to.
-    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-    }
-
-    // Populate the popup and set its coordinates
-    // based on the feature found.
-    popup.setLngLat(coordinates)
-    setHTML(description)
-    .addTo(map);
-  });
-
-    map.on('mouseleave', 'places', function() {
-        map.getCanvas().style.cursor = '';
-        popup.remove();
-    });
 }
 
 $(displayResults);
