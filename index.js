@@ -5,11 +5,11 @@ var map;
 
 const apiKey = '129dca29bda24b02aa5ec3b9cf875b1e'
 
-const searchURL = 'https://newsapi.org/v2/everything';
 
 function formatQueryParams(params) {
   const queryItems = Object.keys(params)
-    .map(key => `${key}=${params[key]}`)
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+  console.log('queryItems',queryItems)
   return queryItems.join('&');
 }
 
@@ -27,17 +27,19 @@ function disasterData(responseJson) {
     const lat=responseJson.data[i].fields.country[0].location.lat;
     const long=responseJson.data[i].fields.country[0].location.lon;
     const location=responseJson.data[i].fields.name;
-    drawMarkers(long,lat, location)
+    drawMarkers(long,lat,location)
   }
 }
 
 // generates news based of name of disaster area from relief API
-function getNews(query, maxResults=10) {
+function getNews(query,maxResults=10,) {
+  console.log(query);
   const params = {
     q: query,
     language: "en",
   };
   const queryString = formatQueryParams(params)
+  const searchURL = `https://newsapi.org/v2/everything`;
   const url = searchURL + '?' + queryString;
 
   console.log(url);
@@ -83,21 +85,25 @@ function newMap(mapboxgl) {
   return Promise.resolve();
 }
 
-
-//
+$('#map').on('click', '.listener', function(e) {
+ const location=e.target.innerHTML;
+ getNews(location);
+});
+// generates map markers along with creating the popups that for each associated marker.
 function drawMarkers(long,lat,location) {
-  var link=`<a href="https://www.google.com">${location}</a>`
+  var link=`<button class='listener'>${location}</button>`
   var marker = new mapboxgl.Marker()
     .setLngLat([long, lat])
     .addTo(map)
     .setPopup(new mapboxgl.Popup().setLngLat([long, lat]).setHTML(link))
 }
 
-//
 function watchForm() {
   $('form').submit(event => {
     event.preventDefault();
   })
 }
+
+$(displayResults);
 
 $(displayResults);
