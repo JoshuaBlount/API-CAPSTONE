@@ -3,8 +3,8 @@
 // create global var for map to use for the several different functions it will be needed for
 var map;
 
-const apiKey = '129dca29bda24b02aa5ec3b9cf875b1e'
-
+const apiKey = '129dca29bda24b02aa5ec3b9cf875b1e';
+const dataArray = [];
 
 function formatQueryParams(params) {
   const queryItems = Object.keys(params)
@@ -24,43 +24,21 @@ function callUrl() {
 
 function disasterData(responseJson) {
   for (let i=0; i<responseJson.data.length; i++) {
+    const newsUrl=responseJson.data[i].fields.url
     const lat=responseJson.data[i].fields.country[0].location.lat;
     const long=responseJson.data[i].fields.country[0].location.lon;
     const location=responseJson.data[i].fields.name;
-    drawMarkers(long,lat,location)
+    const description=responseJson.data[i].fields.description;
+    const dataObject= {
+      newsUrl: newsUrl,
+      description: description,
+      location: location,
+    };
+    dataArray.push(dataObject);
+    drawMarkers(long,lat,location, i);
   }
 }
 
-// generates news based of name of disaster area from relief API
-function getNews(query,maxResults=10,) {
-  console.log(query);
-  const params = {
-    q: query,
-    language: "en",
-  };
-  const queryString = formatQueryParams(params)
-  const searchURL = `https://newsapi.org/v2/everything`;
-  const url = searchURL + '?' + queryString;
-
-  console.log(url);
-
-  const options = {
-    headers: new Headers({
-      "X-Api-Key": apiKey})
-  };
-// fetch API url then throw promises to see if there are any errors or not
-  fetch(url, options)
-    .then(response => {
-      if (response.ok) {
-        return response.json();
-      }
-      throw new Error(response.statusText);
-    })
-    .then(responseJson => console.log(responseJson))
-    .catch(err => {
-      $('#js-error-message').text(`Something went wrong: ${err.message}`);
-    });
-}
 
 // throws promise to check if there are any errors when loading the webgl map
 function displayResults() {
@@ -69,7 +47,6 @@ function displayResults() {
   .then(() => {
     console.log('map loaded')
     callUrl();
-    // getPopups();
   })
   .catch(err => {
     console.log(`map failed to load ${err}`)
@@ -85,25 +62,34 @@ function newMap(mapboxgl) {
   return Promise.resolve();
 }
 
-$('#map').on('click', '.listener', function(e) {
- const location=e.target.innerHTML;
- getNews(location);
-});
 // generates map markers along with creating the popups that for each associated marker.
-function drawMarkers(long,lat,location) {
-  var link=`<button class='listener'>${location}</button>`
+function drawMarkers(long,lat,location, i) {
+  var link=`<button onclick="returnNews('${i}')" class="listener">${location}</button>`
   var marker = new mapboxgl.Marker()
     .setLngLat([long, lat])
     .addTo(map)
     .setPopup(new mapboxgl.Popup().setLngLat([long, lat]).setHTML(link))
 }
 
+
+
+function returnNews(i) {
+  const location= dataArray[i].location;
+  const newsUrl= dataArray[i].newsUrl;
+  const description= dataArray[i].description;
+  console.log(dataArray);
+  $('#results-list').empty();
+  $('#results-list').append(`
+  <li><h3>${location}</h3><p>${description}</p><a href='${newsUrl}'>${location}</a></li>
+  `)
+  $('#results').removeClass('hidden')
+}
+
+
 function watchForm() {
   $('form').submit(event => {
     event.preventDefault();
   })
 }
-
-$(displayResults);
 
 $(displayResults);
