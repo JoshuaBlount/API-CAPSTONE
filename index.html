@@ -4,28 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>API CAPSTONE</title>
+    <title>Disaster Relief</title>
     <link rel="stylesheet" href="index.css">
     <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet'/>
-  </head>
+</head>
   <body>
-
-
-
+    <!-- title and description for the application -->
+    <header role="banner" class="title">Disaster Relief
+      <h1 class="userGuide">Disaster Relief lets you learn about disasters around the world! Just start by clicking a map marker and click the disaster name to get info over it.</h1>
+    </header>
     <!-- Uses MapBox to generate a world map in the satellite style -->
-    <div id='map' style='width: 100%; height: 400px;'></div>
+    <div role="navigation" id="map" style="width: 100%; height: 400px;"></div>
     <!-- Display news reults based off which disaster user clicks on map -->
-    <section id="results" class="hidden">
-      <h2 class='description'>
-
-      </h2>
+    <section id="results" class="hidden" role="main">
+      <!-- holds the data that needs to be displayed in the DOM from our API's -->
       <ul id="results-list">
       </ul>
     </section>
-    <!-- displayes error messages for News API -->
-    <p id="js-error-message" class="error-message"></p>
     <script src='index.js'>
     </script>
   </body>
